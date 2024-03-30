@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
+import React, { useState, useRef, useEffect, ChangeEvent, useCallback } from 'react';
 import './CustomDropDown.style.css';
 
 export interface Option {
@@ -63,26 +63,29 @@ const CustomDropdown: React.FC<Props> = ({ options, onSelect, customRenderer, se
     }
   };
 
-  const handleSearchChange = async (searchTerm: string) => {
-    if (!searchTerm) {
-      setFilteredOptions(options);
-      return;
-    }
+  const handleSearchChange = useCallback(
+    async (searchTerm: string) => {
+      if (!searchTerm) {
+        setFilteredOptions(options);
+        return;
+      }
 
-    if (searchFunction) {
-      setIsFetching(true);
-      const results = await searchFunction(searchTerm);
-      setFilteredOptions(results);
-      setIsFetching(false);
-    } else {
-      const filtered = options.filter((option) => option.label.toLowerCase().includes(searchTerm.toLowerCase()));
-      setFilteredOptions(filtered);
-    }
-  };
+      if (searchFunction) {
+        setIsFetching(true);
+        const results = await searchFunction(searchTerm);
+        setFilteredOptions(results);
+        setIsFetching(false);
+      } else {
+        const filtered = options.filter((option) => option.label.toLowerCase().includes(searchTerm.toLowerCase()));
+        setFilteredOptions(filtered);
+      }
+    },
+    [searchFunction, options],
+  );
 
   useEffect(() => {
     handleSearchChange(searchValue);
-  }, [searchValue]);
+  }, [handleSearchChange, searchValue]);
 
   return (
     <div
@@ -125,7 +128,7 @@ const CustomDropdown: React.FC<Props> = ({ options, onSelect, customRenderer, se
                       className="dropdown-item"
                       key={option.value}
                       onClick={() => handleOptionClick(option)}
-                      onKeyPress={(e) => {
+                      onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           handleOptionClick(option);
                         }
